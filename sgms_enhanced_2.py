@@ -503,13 +503,26 @@ class Database:
             letter, _ = get_letter_grade(marks)
             gp = self._grade_points(letter)
             with self.connect() as conn:
-                conn.execute(
-                    "INSERT INTO grades (studentID, courseID, marks, letterGrade, gradePoints, updatedAt) "
-                    "VALUES (?,?,?,?,?,datetime('now')) "
-                    "ON CONFLICT(studentID,courseID) DO UPDATE SET marks=excluded.marks, "
-                    "letterGrade=excluded.letterGrade, gradePoints=excluded.gradePoints, updatedAt=excluded.updatedAt",
-                    (student_id, course_id, marks, letter, gp)
-                )
+                # Check if grade exists
+                existing = conn.execute(
+                    "SELECT gradeID FROM grades WHERE studentID=? AND courseID=?",
+                    (student_id, course_id)
+                ).fetchone()
+                
+                if existing:
+                    # Update existing grade
+                    conn.execute(
+                        "UPDATE grades SET marks=?, letterGrade=?, gradePoints=?, updatedAt=datetime('now') "
+                        "WHERE studentID=? AND courseID=?",
+                        (marks, letter, gp, student_id, course_id)
+                    )
+                else:
+                    # Insert new grade
+                    conn.execute(
+                        "INSERT INTO grades (studentID, courseID, marks, letterGrade, gradePoints, updatedAt) "
+                        "VALUES (?,?,?,?,?,datetime('now'))",
+                        (student_id, course_id, marks, letter, gp)
+                    )
             logger.info(f"Grade saved: Student {student_id}, Course {course_id}, Marks {marks}")
         except sqlite3.Error as e:
             logger.error(f"Error saving grade: {e}")
