@@ -683,6 +683,12 @@ class SGMSApp:
                   foreground=[("selected", "white")])
         style.configure("Dark.Vertical.TScrollbar",
                         troughcolor=C["bg_dark"], background=C["card_border"])
+        
+        # Configure Combobox styling
+        style.configure("Dark.TCombobox",
+                        fieldbackground=C["input_bg"],
+                        background=C["input_bg"],
+                        foreground=C["text_primary"])
 
     def clear(self):
         """Clear all widgets from root."""
@@ -1316,7 +1322,8 @@ class SGMSApp:
         student_var = tk.StringVar()
         student_map = {f"{s[1]} ({s[2]})": s[0] for s in students}
         s_combo = ttk.Combobox(col_frame, textvariable=student_var,
-                               values=list(student_map.keys()), state="readonly", width=40)
+                               values=list(student_map.keys()), state="readonly", width=40,
+                               style="Dark.TCombobox")
         s_combo.pack(fill="x", ipady=5, pady=(2, 0))
         s_combo.current(0)
 
@@ -1326,7 +1333,8 @@ class SGMSApp:
         course_var = tk.StringVar()
         course_map = {f"{c[1]} ({c[2]})": c[0] for c in courses}
         c_combo = ttk.Combobox(col_frame, textvariable=course_var,
-                               values=list(course_map.keys()), state="readonly", width=40)
+                               values=list(course_map.keys()), state="readonly", width=40,
+                               style="Dark.TCombobox")
         c_combo.pack(fill="x", ipady=5, pady=(2, 0))
         c_combo.current(0)
 
@@ -1355,8 +1363,17 @@ class SGMSApp:
         marks_e.bind("<KeyRelease>", update_preview)
 
         def save():
-            sid = student_map.get(student_var.get())
-            cid = course_map.get(course_var.get())
+            student_display = student_var.get()
+            course_display = course_var.get()
+            
+            # Validate selections
+            sid = student_map.get(student_display)
+            cid = course_map.get(course_display)
+            
+            if sid is None or cid is None:
+                messagebox.showwarning("Invalid Selection", "Please select both a student and a course.", parent=win)
+                return
+            
             try:
                 marks = float(marks_e.get())
                 if not 0 <= marks <= 100:
@@ -1481,7 +1498,7 @@ class SGMSApp:
         role_var = tk.StringVar(value="Teacher")
         role_combo = ttk.Combobox(col_frame, textvariable=role_var,
                                   values=["Admin", "Teacher", "Student"],
-                                  state="readonly", width=38)
+                                  state="readonly", width=38, style="Dark.TCombobox")
         role_combo.pack(fill="x", ipady=5, pady=(2, 0))
 
         def save():
